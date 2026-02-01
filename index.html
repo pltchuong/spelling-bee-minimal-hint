@@ -12,7 +12,7 @@
     </script>
     
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spelling Bee Minimal Hint - Daily Puzzle Helper</title>
     <meta name="description" content="A spoiler-free hint tool for NYT Spelling Bee. Get the count of matching words without revealing answers. Type letters or use wildcards to see how many words match your guess.">
     <meta name="keywords" content="spelling bee, nyt spelling bee, spelling bee hints, spelling bee helper, spelling bee solver, word game helper, puzzle hints">
@@ -28,9 +28,11 @@
         }
         html, body {
             height: 100%;
+            touch-action: manipulation;
         }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            -webkit-text-size-adjust: 100%;
         }
     </style>
     <style>
@@ -53,6 +55,8 @@
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .hex:hover { background: #d0d0d0; }
         .hex.center { background: #f7da21; }
@@ -79,6 +83,8 @@
             border-radius: 8px;
             background: white;
             cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .btn:hover { background: #f0f0f0; }
         .btn.round {
