@@ -141,10 +141,10 @@
                 const targetUrl = 'https://www.nytimes.com/puzzles/spelling-bee';
                 const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
                 const proxyUrl = isLocal
-                    ? 'https://corsproxy.io/?' + targetUrl
-                    : 'https://api.allorigins.win/get?url=' + targetUrl;
+                    ? 'https://whateverorigin.org/get?url=' + targetUrl
+                    : 'https://whateverorigin.org/get?url=' + targetUrl;
                 const response = await fetch(proxyUrl);
-                const html = isLocal ? await response.text() : (await response.json()).contents;
+                const html = (await response.json()).contents;
                 
                 const startMarker = 'window.gameData = ';
                 const startIdx = html.indexOf(startMarker);
