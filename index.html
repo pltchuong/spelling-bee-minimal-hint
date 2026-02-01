@@ -138,13 +138,13 @@
     <script>
         async function fetchSpellingBeeAnswers() {
             try {
-                const targetUrl = 'https://www.nytimes.com/puzzles/spelling-bee';
+                const targetUrl = 'www.nytimes.com/puzzles/spelling-bee';
                 const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
                 const proxyUrl = isLocal
-                    ? 'https://whateverorigin.org/get?url=' + targetUrl
-                    : 'https://whateverorigin.org/get?url=' + targetUrl;
+                    ? 'https://api.cors.lol/?url=' + targetUrl
+                    : 'https://api.cors.lol/?url=' + targetUrl;
                 const response = await fetch(proxyUrl);
-                const html = (await response.json()).contents;
+                const html = await response.text();
                 
                 const startMarker = 'window.gameData = ';
                 const startIdx = html.indexOf(startMarker);
