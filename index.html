@@ -150,11 +150,82 @@
             font-weight: bold;
             margin-bottom: 10px;
         }
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .menu-btn span {
+            display: block;
+            width: 22px;
+            height: 3px;
+            background: #333;
+            border-radius: 2px;
+        }
+        .menu {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 100;
+            min-width: 180px;
+        }
+        .menu.open { display: block; }
+        .menu a {
+            display: block;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: #333;
+            border-bottom: 1px solid #eee;
+        }
+        .menu a:last-child { border-bottom: none; }
+        .menu a:hover { background: #f5f5f5; }
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: none;
+            z-index: 99;
+        }
+        .menu-overlay.open { display: block; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="title">Spelling Bee Minimal Hint</h1>
+        <div class="header">
+            <div></div>
+            <h1 class="title">Spelling Bee<br>Minimal Hint</h1>
+            <button class="menu-btn" id="menuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div class="menu-overlay" id="menuOverlay"></div>
+        <nav class="menu" id="menu">
+            <a href="https://www.nytimes.com/puzzles/spelling-bee" target="_blank">Play on NYT</a>
+            <a href="https://github.com/pltchuong/spelling-bee-minimal-hint" target="_blank">GitHub</a>
+            <a href="#" id="resetStatsBtn">Reset Stats</a>
+            <a href="#" id="helpBtn">Help</a>
+        </nav>
         <div><span id="word"></span><span id="count"></span></div>
         <div id="letters" class="hive"></div>
         <div class="buttons">
@@ -393,6 +464,39 @@
         }
         
         fetchSpellingBeeAnswers();
+        
+        // Menu functionality
+        const menuBtn = document.getElementById('menuBtn');
+        const menu = document.getElementById('menu');
+        const menuOverlay = document.getElementById('menuOverlay');
+        
+        function toggleMenu() {
+            menu.classList.toggle('open');
+            menuOverlay.classList.toggle('open');
+        }
+        
+        function closeMenu() {
+            menu.classList.remove('open');
+            menuOverlay.classList.remove('open');
+        }
+        
+        menuBtn.addEventListener('click', toggleMenu);
+        menuOverlay.addEventListener('click', closeMenu);
+        
+        document.getElementById('resetStatsBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Reset stats for this puzzle?')) {
+                stats = { attempts: [], found: [] };
+                saveStats();
+            }
+            closeMenu();
+        });
+        
+        document.getElementById('helpBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('* Type letters to see how many words match.\n* Use ✱ as a wildcard.\n* Stats are reset daily.\n* Built by Phan Chuong');
+            closeMenu();
+        });
     </script>
 </body>
 </html>
