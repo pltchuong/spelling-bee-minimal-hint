@@ -23,6 +23,24 @@ from flask import Flask, request, Response, jsonify
 app = Flask(__name__)
 application = app  # WSGI standard
 
+# Allowed origins (only these can use the proxy)
+ALLOWED_ORIGINS = [
+    "https://pltchuong.github.io",
+    "http://localhost",
+    "http://127.0.0.1",
+]
+
+
+def is_origin_allowed(origin: str) -> bool:
+    """Check if the request origin is allowed."""
+    if not origin:
+        return False
+    for allowed in ALLOWED_ORIGINS:
+        # Exact match, path match, or port match (e.g. localhost:3000)
+        if origin == allowed or origin.startswith(allowed + "/") or origin.startswith(allowed + ":"):
+            return True
+    return False
+
 
 def get_target_url(path: str, query_url: str = None) -> str | None:
     """Extract target URL from path or query parameter."""
@@ -48,10 +66,12 @@ def get_forward_headers() -> dict:
 @app.after_request
 def after_request(response: Response) -> Response:
     """Add CORS headers to all responses."""
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
-    response.headers["Access-Control-Max-Age"] = "86400"
+    origin = request.headers.get("Origin", "")
+    if is_origin_allowed(origin):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+        response.headers["Access-Control-Max-Age"] = "86400"
     return response
 
 
@@ -59,8 +79,17 @@ def after_request(response: Response) -> Response:
 @app.route("/proxy/<path:url>", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
 def proxy(url: str = None):
     """Proxy endpoint."""
+    origin = request.headers.get("Origin", "")
+    
+    # Allow preflight but still check origin for actual requests
     if request.method == "OPTIONS":
-        return Response(status=200)
+        if is_origin_allowed(origin):
+            return Response(status=200)
+        return Response(status=403)
+
+    # Block requests from non-allowed origins
+    if not is_origin_allowed(origin):
+        return jsonify({"error": "Forbidden", "message": "Origin not allowed"}), 403
 
     target_url = get_target_url(request.path, request.args.get("url"))
 
