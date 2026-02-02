@@ -118,17 +118,15 @@
             <button class="btn" id="shuffleBtn">Shuffle</button>
         </div>
     </div>
-    <input type="text" id="guess" style="position: absolute; left: -9999px; top: 0; opacity: 0; width: 1px; height: 1px; border: none; caret-color: transparent; font-size: 16px;">
     
     <script>
         let answers = [];
         let validLetters = [];
         let centerLetter = '';
+        let currentWord = '';
         
-        document.getElementById('guess').addEventListener('input', (e) => {
-            const raw = e.target.value.toLowerCase();
-            const value = raw.split('').filter(c => c === '*' || validLetters.includes(c)).join('');
-            if (value !== raw) e.target.value = value;
+        function updateDisplay() {
+            const value = currentWord.toLowerCase();
             const wordEl = document.getElementById('word');
             wordEl.textContent = value.toUpperCase();
             wordEl.style.fontWeight = answers.includes(value) ? 'bold' : 'normal';
@@ -148,13 +146,30 @@
                 const matches = answers.filter(a => a.startsWith(value));
                 document.getElementById('count').textContent = matches.length;
             }
-        });
+        }
+        
+        function addLetter(letter) {
+            const l = letter.toLowerCase();
+            if (l === '*' || validLetters.includes(l)) {
+                currentWord += l;
+                updateDisplay();
+            }
+        }
+        
+        function deleteLetter() {
+            currentWord = currentWord.slice(0, -1);
+            updateDisplay();
+        }
     </script>
     
     <script>
         async function fetchSpellingBeeAnswers() {
             try {
-                const response = await fetch('https://api.cors.lol/?url=https://www.nytimes.com/puzzles/spelling-bee');
+                const response = await fetch('https://cors-proxy.htmldriven.com/?url=https://www.nytimes.com/puzzles/spelling-bee', {
+                    headers: {
+                        'Origin': 'https://www.nytimes.com'
+                    }
+                });
                 const html = await response.text();
                 
                 const startMarker = 'window.gameData = ';
@@ -201,25 +216,12 @@
                 
                 document.querySelectorAll('.hex').forEach(hex => {
                     hex.addEventListener('click', () => {
-                        const input = document.getElementById('guess');
-                        input.value += hex.dataset.letter;
-                        input.dispatchEvent(new Event('input'));
-                        input.focus();
+                        addLetter(hex.dataset.letter);
                     });
                 });
                 
-                document.getElementById('guess').focus();
-                document.body.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('btn')) {
-                        document.getElementById('guess').focus();
-                    }
-                });
-                
                 document.getElementById('deleteBtn').addEventListener('click', () => {
-                    const input = document.getElementById('guess');
-                    input.value = input.value.slice(0, -1);
-                    input.dispatchEvent(new Event('input'));
-                    input.focus();
+                    deleteLetter();
                 });
                 
                 document.getElementById('shuffleBtn').addEventListener('click', () => {
@@ -229,14 +231,10 @@
                     outerHexes.forEach((hex, i) => {
                         hex.className = 'hex ' + shuffled[i];
                     });
-                    document.getElementById('guess').focus();
                 });
                 
                 document.getElementById('wildBtn').addEventListener('click', () => {
-                    const input = document.getElementById('guess');
-                    input.value += '*';
-                    input.dispatchEvent(new Event('input'));
-                    input.focus();
+                    addLetter('*');
                 });
                 
                 console.log('Answers:', answers);
