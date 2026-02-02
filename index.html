@@ -103,6 +103,18 @@
             font-size: 12px;
             margin-left: 15px;
         }
+        #stats {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #444;
+        }
+        #stats span {
+            font-weight: bold;
+            color: #222;
+        }
         .buttons {
             display: flex;
             justify-content: center;
@@ -150,6 +162,7 @@
             <button class="btn round" id="wildBtn" style="font-size: 24px;">✱</button>
             <button class="btn" id="shuffleBtn">Shuffle</button>
         </div>
+        <div id="stats"></div>
         <div id="definition"></div>
     </div>
     
@@ -158,6 +171,53 @@
         let validLetters = [];
         let centerLetter = '';
         let currentWord = '';
+        let puzzleKey = '';
+        let stats = { attempts: [], found: [] };
+        
+        function getPuzzleKey(letters) {
+            return 'sbstats_' + [...letters].sort().join('');
+        }
+        
+        function loadStats() {
+            if (!puzzleKey) return;
+            const saved = localStorage.getItem(puzzleKey);
+            if (saved) {
+                stats = JSON.parse(saved);
+            } else {
+                stats = { attempts: [], found: [] };
+            }
+            updateStatsDisplay();
+        }
+        
+        function saveStats() {
+            if (!puzzleKey) return;
+            localStorage.setItem(puzzleKey, JSON.stringify(stats));
+            updateStatsDisplay();
+        }
+        
+        function updateStatsDisplay() {
+            const el = document.getElementById('stats');
+            if (!el) return;
+            el.innerHTML = `Attempts: <span>${stats.attempts.length}</span> | Found: <span>${stats.found.length}</span>`;
+        }
+        
+        function trackWord(word) {
+            // Only count words >= 4 letters without wildcards
+            if (word.length >= 4 && !word.includes('*')) {
+                let changed = false;
+                // Track attempt if not already tracked
+                if (!stats.attempts.includes(word)) {
+                    stats.attempts.push(word);
+                    changed = true;
+                }
+                // Track found if it's a match
+                if (answers.includes(word) && !stats.found.includes(word)) {
+                    stats.found.push(word);
+                    changed = true;
+                }
+                if (changed) saveStats();
+            }
+        }
         
         function updateDisplay() {
             const value = currentWord.toLowerCase();
@@ -182,6 +242,9 @@
                 const matches = answers.filter(a => a.startsWith(value));
                 document.getElementById('count').textContent = matches.length;
             }
+            
+            // Track attempts and found words
+            trackWord(value);
             
             // Fetch definition on exact match
             if (isExactMatch) {
@@ -278,6 +341,10 @@
                 answers = gameData.today.answers;
                 validLetters = gameData.today.validLetters;
                 centerLetter = gameData.today.centerLetter;
+                
+                // Initialize stats for this puzzle
+                puzzleKey = getPuzzleKey(validLetters);
+                loadStats();
                 
                 const others = validLetters.filter(l => l !== centerLetter);
                 
