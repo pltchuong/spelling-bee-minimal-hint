@@ -70,6 +70,39 @@
         .hex.pos-5 { left: 66px; top: 128px; }
         #word { font-size: 24px; margin: 20px 0; min-height: 30px; text-align: center; }
         #count { font-size: 20px; margin-left: 10px; }
+        #definition {
+            margin-top: 20px;
+            padding: 15px;
+            max-width: 400px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+        #definition.visible { display: block; }
+        #definition .word-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        #definition .phonetic {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        #definition .part-of-speech {
+            font-weight: bold;
+            color: #444;
+            margin-top: 10px;
+        }
+        #definition .def-text {
+            margin: 5px 0 5px 15px;
+        }
+        #definition .synonyms {
+            color: #666;
+            font-size: 12px;
+            margin-left: 15px;
+        }
         .buttons {
             display: flex;
             justify-content: center;
@@ -117,6 +150,7 @@
             <button class="btn round" id="wildBtn" style="font-size: 24px;">✱</button>
             <button class="btn" id="shuffleBtn">Shuffle</button>
         </div>
+        <div id="definition"></div>
     </div>
     
     <script>
@@ -129,11 +163,13 @@
             const value = currentWord.toLowerCase();
             const wordEl = document.getElementById('word');
             wordEl.textContent = value.toUpperCase();
-            wordEl.style.fontWeight = answers.includes(value) ? 'bold' : 'normal';
+            const isExactMatch = answers.includes(value);
+            wordEl.style.fontWeight = isExactMatch ? 'bold' : 'normal';
             const letters = value.replace(/\*/g, '');
             
             if (letters.length < 1) {
                 document.getElementById('count').textContent = '';
+                document.getElementById('definition').className = '';
                 return;
             }
             
@@ -145,6 +181,13 @@
             } else {
                 const matches = answers.filter(a => a.startsWith(value));
                 document.getElementById('count').textContent = matches.length;
+            }
+            
+            // Fetch definition on exact match
+            if (isExactMatch) {
+                fetchDefinition(value);
+            } else {
+                document.getElementById('definition').className = '';
             }
         }
         
@@ -159,6 +202,44 @@
         function deleteLetter() {
             currentWord = currentWord.slice(0, -1);
             updateDisplay();
+        }
+        
+        async function fetchDefinition(word) {
+            const defEl = document.getElementById('definition');
+            defEl.className = '';
+            defEl.innerHTML = '';
+            
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+                if (!response.ok) {
+                    defEl.innerHTML = '<em>No definition found</em>';
+                    defEl.className = 'visible';
+                    return;
+                }
+                
+                const data = await response.json();
+                const entry = data[0];
+                
+                let html = `<div class="word-title">${entry.word}</div>`;
+                if (entry.phonetic) {
+                    html += `<div class="phonetic">${entry.phonetic}</div>`;
+                }
+                
+                for (const meaning of entry.meanings) {
+                    html += `<div class="part-of-speech">${meaning.partOfSpeech}</div>`;
+                    for (const def of meaning.definitions.slice(0, 2)) {
+                        html += `<div class="def-text">• ${def.definition}</div>`;
+                        if (def.synonyms && def.synonyms.length > 0) {
+                            html += `<div class="synonyms">Synonyms: ${def.synonyms.slice(0, 3).join(', ')}</div>`;
+                        }
+                    }
+                }
+                
+                defEl.innerHTML = html;
+                defEl.className = 'visible';
+            } catch (error) {
+                console.error('Error fetching definition:', error);
+            }
         }
     </script>
     
