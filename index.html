@@ -380,38 +380,12 @@
     <script>
         async function fetchSpellingBeeAnswers() {
             try {
-                const response = await fetch('https://spelling-bee-minimal-hint.onrender.com/proxy?url=https://www.nytimes.com/puzzles/spelling-bee', {
-                    headers: {
-                        'Origin': 'https://www.nytimes.com'
-                    }
-                });
-                const html = await response.text();
-                
-                const startMarker = 'window.gameData = ';
-                const startIdx = html.indexOf(startMarker);
-                if (startIdx === -1) {
-                    console.log('No gameData found');
-                    return;
-                }
-                
-                const jsonStart = startIdx + startMarker.length;
-                let braceCount = 0;
-                let jsonEnd = jsonStart;
-                
-                for (let i = jsonStart; i < html.length; i++) {
-                    if (html[i] === '{') braceCount++;
-                    if (html[i] === '}') braceCount--;
-                    if (braceCount === 0) {
-                        jsonEnd = i + 1;
-                        break;
-                    }
-                }
-                
-                const jsonStr = html.slice(jsonStart, jsonEnd);
-                const gameData = JSON.parse(jsonStr);
-                answers = gameData.today.answers;
-                validLetters = gameData.today.validLetters;
-                centerLetter = gameData.today.centerLetter;
+                const response = await fetch('today.json');
+                if (!response.ok) throw new Error('Failed to fetch today.json');
+                const gameData = await response.json();
+                answers = gameData.answers;
+                validLetters = gameData.validLetters;
+                centerLetter = gameData.centerLetter;
                 
                 // Initialize stats for this puzzle
                 puzzleKey = getPuzzleKey(validLetters);
